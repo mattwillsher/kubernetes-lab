@@ -1,0 +1,82 @@
+# yaml-language-server: $schema=https://json.schemastore.org/taskfile.json
+version: "3"
+
+vars:
+  DNS_DOMAIN: test
+  ADDONS:
+    - ingress
+    - ingress-dns
+    - metrics-server
+    - dashboard
+    - storage-provisioner
+    - default-storageclass
+
+tasks:
+  up:
+    - task: start
+    - task: addons
+    - task: host-dns:{{ OS }}
+    - task: coredns
+  down:
+    cmds:
+      - task: host-dns:{{ OS }}:cleanup
+      - minikube stop
+      - minikube delete
+  start:
+    cmds:
+      - minikube --memory=8192 --cpus=4 --container-runtime=containerd --driver=docker start
+    status:
+      - "minikube status | grep 'host: Running'"
+  addons:
+    deps:
+      - start
+    cmds:
+      - for:
+          var: ADDONS
+        cmd: minikube addons list | grep -E '{{ .ITEM }}\s+\|.+enabled' >/dev/null || minikube addons enable {{ .ITEM }}
+  host-dns:linux:
+    vars:
+      IP:
+        sh: minikube ip
+    cmds:
+      - sudo mkdir -p /etc/systemd/resolved.conf.d
+      - |
+        sudo tee /etc/systemd/resolved.conf.d/minikube.conf << EOF
+        [Resolve]
+        DNSStubListener=no
+        DNS=127.0.0.1
+        EOF
+      - sudo systemctl restart systemd-resolved
+      - sudo mkdir -p /etc/NetworkManager/dnsmasq.d/
+      - echo "server=/test/{{ .IP }}" | sudo tee /etc/NetworkManager/dnsmasq.d/minikube.conf
+      - sudo systemctl restart NetworkManager
+    status:
+      - test -f /etc/systemd/resolved.conf.d/minikube.conf
+    platforms:
+      - linux
+  host-dns:linux:cleanup:
+    cmds:
+      - sudo rm -f /etc/systemd/resolved.conf.d/minikube.conf
+      - sudo rm /etc/NetworkManager/dnsmasq.d/minikube.conf
+      - sudo systemctl restart systemd-resolved
+      - sudo systemctl restart NetworkManager
+    status:
+      - ! test -f /etc/systemd/resolved.conf.d/minikube.conf
+    platforms:
+      - linux
+  coredns:
+    vars:
+      IP:
+        sh: minikube ip
+    cmds:
+      - |
+        cat <<EOF | kubectl create configmap -n kube-system coredns --from-file=Corefile=/dev/stdin --dry-run=client -o yaml | kubectl apply -f -
+        $(kubectl get configmap -n kube-system coredns -o jsonpath='{.data.Corefile}')
+        {{ .DNS_DOMAIN }}:53 {
+          errors
+          cache 30
+          forward . {{ .IP }}
+        }
+        EOF
+    status:
+      - kubectl get configmap -n kube-system coredns -o jsonpath='{.data.Corefile}' | grep "{{ .DNS_DOMAIN }}:53"

@@ -1,0 +1,27 @@
+version: "3"
+
+tasks:
+  install:
+    cmd: kustomize build --enable-helm . | kubectl apply -f -
+
+  init:
+    cmd: vault operator init -key-shares=1 -key-threshold=1 -format=json | tee vault-init.json
+    status:
+      - vault status -format=json | jq --exit-status '.initialized == true'
+
+  unseal:
+    vars:
+      KEY:
+        sh: jq -r '.unseal_keys_b64[0]' vault-init.json
+    cmd: vault operator unseal {{ .KEY }}
+    status:
+      - vault status
+
+  login:
+    env:
+      ROOT_TOKEN:
+        sh: jq -r '.root_token' vault-init.json
+    cmd: echo $ROOT_TOKEN | vault login -method=token -
+
+  uninstall:
+    cmd: kustomize build --enable-helm . | kubectl delete -f -

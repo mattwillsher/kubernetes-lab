@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: gitea
+
+commonAnnotations:
+  deployed-by: kustomize
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: gitea
+      app.kubernetes.io/part-of: gitea
+      app.kubernetes.io/managed-by: kustomize
+
+resources:
+  - namespace.yaml
+  - application.yaml
+
+helmCharts:
+  - name: gitea
+    repo: oci://docker.gitea.com/charts
+    version: 12.0.0
+    releaseName: gitea
+    valuesFile: values.yaml

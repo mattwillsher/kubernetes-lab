@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+resources:
+  - namespace.yaml
+
+helmCharts:
+  - name: kube-prometheus-stack
+    repo: https://prometheus-community.github.io/helm-charts
+    version: 72.6.2
+    releaseName: &name prometheus
+    valuesInline:
+      cleanPrometheusOperatorObjectNames: true
+      crds:
+        create: false
+      prometheus:
+        prometheusSpec:
+          retention: 3d
+          serviceMonitorSelectorNilUsesHelmValues: false
+          podMonitorSelectorNilUsesHelmValues: false
+          ruleSelectorNilUsesHelmValues: false
+          probeSelectorNilUsesHelmValues: false
+          storageSpec:
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 5Gi
+      grafana:
+        ingress:
+          enabled: true
+          annotations:
+            ingress.kubernetes.io/ssl-redirect: "false"
+            ingress.kubernetes.io/backend-protocol: "http"
+          ingressClassName: nginx
+          hosts:
+            - grafana.test

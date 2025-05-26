@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://json.schemastore.org/taskfile.json
+version: "3"
+
+includes:
+  minikube: taskfiles/minikube.yaml
+  argocd: taskfiles/argocd.yaml
+
+tasks:
+  bootstrap:
+    cmds:
+      - task: minikube:up
+
+  crds: kustomize build crds/ | kubectl apply -f -
+
+  alpine: kubectl run -ti --rm alpine --image=alpine --restart=Never -- sh

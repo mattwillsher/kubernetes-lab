@@ -1,0 +1,12 @@
+version: "3"
+
+tasks:
+  install:
+    cmd: kustomize build --enable-helm . | kubectl apply -f -
+
+  uninstall:
+    cmd: kustomize build --enable-helm . | kubectl delete -f -
+
+  grafana-credentials:
+    cmds:
+      - kubectl get secret -n monitoring prometheus-grafana -o json | jq '.data."admin-user", .data."admin-password"|@base64d'

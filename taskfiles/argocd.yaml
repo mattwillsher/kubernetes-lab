@@ -1,0 +1,23 @@
+# $yaml-language-server: $schema=https://json.schemastore.org/taskfile.json
+
+version: "3"
+
+vars:
+  HOST: argocd.test
+
+tasks:
+  install:
+    cmds:
+      - kustomize build --enable-helm applications/argocd/ | kubectl apply -f -
+
+  reset_password:
+    env:
+      PASSWORD:
+        sh: kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 --decode
+    cmds:
+      - argocd login --plaintext --grpc-web {{ .HOST }}:80 --username admin --password $PASSWORD
+      - argocd account update-password --plaintext --grpc-web --server argocd.test:80 --account admin --current-password $PASSWORD --new-password admin123
+      - echo "Password set to 'admin123' for user 'admin'."
+
+  login:
+    cmd: argocd login --plaintext --grpc-web {{ .HOST }}:80 --username admin --password admin123
