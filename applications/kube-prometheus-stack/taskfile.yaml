@@ -3,9 +3,14 @@ version: "3"
 tasks:
   install:
     cmd: kustomize build --enable-helm . | kubectl apply -f -
+    status:
+      - kustomize build --enable-helm . | kubectl diff -f -
 
   uninstall:
     cmd: kustomize build --enable-helm . | kubectl delete -f -
+
+  destroy:
+    cmd: kubectl delete namespace monitoring
 
   grafana-credentials:
     cmds:
