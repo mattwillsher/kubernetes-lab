@@ -14,6 +14,9 @@ includes:
   vault:
     taskfile: applications/vault/taskfile.yaml
     dir: applications/vault
+  prometheus:
+    taskfile: applications/kube-prometheus-stack/taskfile.yaml
+    dir: applications/kube-prometheus-stack
 
 tasks:
   bootstrap:
@@ -22,5 +25,6 @@ tasks:
       - task: crds:install
       - task: argocd:install
       - task: vault:install
+      - task: prometheus:install
 
   alpine: kubectl run -ti --rm alpine --image=alpine --restart=Never -- sh
