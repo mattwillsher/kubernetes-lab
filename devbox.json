@@ -2,11 +2,13 @@
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.14.2/.schema/devbox.schema.json",
   "packages": [
     "kubernetes-helm@3.17.3",
+    "jq@latest",
     "go-task@latest",
-    "argocd@latest",
-    "kubectl@latest",
-    "kustomize@latest",
-    "vault@latest"
+    "vault@1.19.4",
+    "argocd@2.14.11",
+    "minikube@1.33.0",
+    "kubectl@1.33.0",
+    "kustomize@5.6.0"
   ],
   "shell": {
     "init_hook": [

@@ -1,0 +1,8 @@
+version: "3"
+
+tasks:
+  install:
+    cmd: kustomize build . | kubectl apply -f -
+
+  uninstall:
+    cmd: kustomize build . | kubectl delete -f -

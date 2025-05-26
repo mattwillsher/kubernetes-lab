@@ -23,5 +23,9 @@ tasks:
         sh: jq -r '.root_token' vault-init.json
     cmd: echo $ROOT_TOKEN | vault login -method=token -
 
+  echo-token: jq -r '.root_token' vault-init.json
+
+  ui: xdg-open http://vault.test # TODO: query the ingress host
+
   uninstall:
     cmd: kustomize build --enable-helm . | kubectl delete -f -

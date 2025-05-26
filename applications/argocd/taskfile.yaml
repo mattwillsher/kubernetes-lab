@@ -6,9 +6,7 @@ vars:
   HOST: argocd.test
 
 tasks:
-  install:
-    cmds:
-      - kustomize build --enable-helm applications/argocd/ | kubectl apply -f -
+  install: kustomize build --enable-helm . | kubectl apply -f -
 
   reset_password:
     env:
@@ -21,3 +19,5 @@ tasks:
 
   login:
     cmd: argocd login --plaintext --grpc-web {{ .HOST }}:80 --username admin --password admin123
+
+  uninstall: kustomize build --enable-helm . | kubectl delete -f -

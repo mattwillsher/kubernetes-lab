@@ -2,14 +2,25 @@
 version: "3"
 
 includes:
-  minikube: taskfiles/minikube.yaml
-  argocd: taskfiles/argocd.yaml
+  minikube:
+    taskfile: clusters/minikube/taskfile.yaml
+    dir: clusters/minikube
+  crds:
+    taskfile: crds/taskfile.yaml
+    dir: crds
+  argocd:
+    taskfile: applications/argocd/taskfile.yaml
+    dir: applications/argocd
+  vault:
+    taskfile: applications/vault/taskfile.yaml
+    dir: applications/vault
 
 tasks:
   bootstrap:
     cmds:
       - task: minikube:up
-
-  crds: kustomize build crds/ | kubectl apply -f -
+      - task: crds:install
+      - task: argocd:install
+      - task: vault:install
 
   alpine: kubectl run -ti --rm alpine --image=alpine --restart=Never -- sh
