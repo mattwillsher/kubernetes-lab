@@ -17,6 +17,14 @@ helmCharts:
       crds:
         create: false
       prometheus:
+        ingress:
+          enabled: true
+          annotations:
+            ingress.kubernetes.io/ssl-redirect: "false"
+            ingress.kubernetes.io/backend-protocol: "http"
+          ingressClassName: nginx
+          hosts:
+            - prometheus.test
         prometheusSpec:
           retention: 2d
           serviceMonitorSelectorNilUsesHelmValues: false
