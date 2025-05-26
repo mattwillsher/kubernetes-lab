@@ -17,11 +17,14 @@ tasks:
     - task: addons
     - task: host-dns:{{ OS }}
     - task: coredns
+    - task: kustomize
+
   down:
     cmds:
       - task: host-dns:{{ OS }}:cleanup
       - minikube stop
       - minikube delete
+
   start:
     cmds:
       - minikube --memory=8192 --cpus=4 --container-runtime=containerd --driver=docker start
@@ -80,3 +83,4 @@ tasks:
         EOF
     status:
       - kubectl get configmap -n kube-system coredns -o jsonpath='{.data.Corefile}' | grep "{{ .DNS_DOMAIN }}:53"
+  kustomize: kubectl apply -k .
